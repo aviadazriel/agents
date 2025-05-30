@@ -6,11 +6,16 @@ from langchain.agents import AgentType, Tool
 from langchain.agents import initialize_agent
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferWindowMemory
+from pydantic import BaseModel
 
-from base_agent import BaseAgent
+# Add Config class to allow arbitrary types
+class Config(BaseModel):
+    arbitrary_types_allowed = True
+
+# from base_agent import BaseAgent
 from tools import StockPriceTool, WeatherTool, search_tool
 
-class AIAgent(BaseAgent):
+class AIAgent:
     def __init__(self, openai_api_key: Optional[str] = None, serper_api_key: Optional[str] = None):
         """
         Initialize the AI Agent.
@@ -37,9 +42,10 @@ class AIAgent(BaseAgent):
             temperature=0,
             openai_api_key=self.openai_api_key
         )
-        
+        self.llm = llm
+        self._initialize_components()
         # Call parent constructor
-        super().__init__(llm=llm)
+        # super().__init__(llm=llm)
         
     def _initialize_components(self) -> None:
         """Initialize the LLM, tools, memory, and agent components."""
@@ -53,14 +59,14 @@ class AIAgent(BaseAgent):
         # Initialize tools
         self.tools = self._get_tools()
         
-        # Initialize agent
-        self.agent = initialize_agent(
-            self.tools,
-            self.llm,
-            agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            verbose=True,
-            memory=self.memory
-        )
+        # Create prompt
+        prompt = self._get_system_prompt()
+        
+        # Create agent
+        agent = initialize_agent(self.tools, self.llm, agent_type=AgentType.OPENAI, memory=self.memory)
+        
+        # Initialize agent executor
+        self.agent = agent
     
     def _get_tools(self) -> List[Tool]:
         """Get the list of tools available to the agent."""
@@ -73,11 +79,9 @@ class AIAgent(BaseAgent):
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the general agent."""
         return """
-        give a very details answer for any input and its must to be correct
-
-        <question>
-        {query}
-        </question>
+        Assistant is designed to provide detailed and accurate answers.
+        For the following input, provide a comprehensive response:
+        {input}
         """
     
     def run(self, query: str, detailed: bool = True) -> str:
@@ -91,9 +95,4 @@ class AIAgent(BaseAgent):
         Returns:
             str: The agent's response
         """
-        if detailed:
-            prompt = self._get_system_prompt().format(query=query)
-        else:
-            prompt = query
-            
-        return self.agent.run(prompt)
+        return self.agent.invoke({"input": query})["output"]

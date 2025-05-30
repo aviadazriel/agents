@@ -1,11 +1,11 @@
 from general_agent import AIAgent
-from db_agent import DBAgent
+# from db_agent import DBAgent  # noqa
 
 def main():
     # Create agent instance
     try:
-        # agent = AIAgent()
-        agent = DBAgent(db_url="sqlite:///Chinook.db")
+        agent = AIAgent()
+        # agent = DBAgent(db_url="sqlite:///Chinook.db")
         
         # Example queries
         queries = [
@@ -17,7 +17,7 @@ def main():
         ]
 
         question = queries[1]
-        question = "Which sales agent made the most in sales in 2009?"
+        # question = "Which sales agent made the most in sales in 2009?"
 
         # Run example query (uncomment to test)
         result = agent.run(question)
