@@ -1,0 +1,10 @@
+python-dotenv==1.0.0
+langchain
+langchain-openai
+langchain-community
+openai
+requests==2.31.0
+wikipedia==1.4.0
+yfinance==0.2.36
+pydantic==2.6.3
+google-serper==1.0.3 
