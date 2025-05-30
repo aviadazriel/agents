@@ -4,14 +4,21 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from langchain.agents import AgentType, Tool
 from langchain.agents import initialize_agent
-from langchain.agents import load_tools
 from langchain.llms import OpenAI
-from langchain.memory import ConversationBufferMemory, ConversationBufferWindowMemory
+from langchain.memory import ConversationBufferWindowMemory
 
+from base_agent import BaseAgent
 from tools import StockPriceTool, WeatherTool, search_tool
 
-class AIAgent:
+class AIAgent(BaseAgent):
     def __init__(self, openai_api_key: Optional[str] = None, serper_api_key: Optional[str] = None):
+        """
+        Initialize the AI Agent.
+        
+        Args:
+            openai_api_key: OpenAI API key (optional)
+            serper_api_key: Serper API key (optional)
+        """
         # Load environment variables if keys not provided
         load_dotenv()
         
@@ -25,8 +32,14 @@ class AIAgent:
         # Set Serper API key for the environment
         os.environ["SERPER_API_KEY"] = self.serper_api_key
         
-        # Initialize components
-        self._initialize_components()
+        # Initialize LLM before calling parent
+        llm = OpenAI(
+            temperature=0,
+            openai_api_key=self.openai_api_key
+        )
+        
+        # Call parent constructor
+        super().__init__(llm=llm)
         
     def _initialize_components(self) -> None:
         """Initialize the LLM, tools, memory, and agent components."""
@@ -35,12 +48,6 @@ class AIAgent:
             memory_key="chat_history",
             return_messages=True,
             k=2
-        )
-        
-        # Initialize LLM
-        self.llm = OpenAI(
-            temperature=0,
-            openai_api_key=self.openai_api_key
         )
         
         # Initialize tools
@@ -63,6 +70,16 @@ class AIAgent:
             search_tool
         ]
     
+    def _get_system_prompt(self) -> str:
+        """Get the system prompt for the general agent."""
+        return """
+        give a very details answer for any input and its must to be correct
+
+        <question>
+        {query}
+        </question>
+        """
+    
     def run(self, query: str, detailed: bool = True) -> str:
         """
         Run a query through the agent.
@@ -75,13 +92,7 @@ class AIAgent:
             str: The agent's response
         """
         if detailed:
-            prompt = """
-            give a very details answer for any input and its must to be correct
-
-            <question>
-            {query}
-            </question>
-            """.format(query=query)
+            prompt = self._get_system_prompt().format(query=query)
         else:
             prompt = query
             

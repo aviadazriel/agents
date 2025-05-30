@@ -73,3 +73,19 @@ class WeatherTool(BaseTool):
 
     async def _arun(self, city: str):
         raise NotImplementedError("Async not implemented")
+
+
+get_db_tools(dbPath, llm):
+    from langchain_community.agent_toolkits import SQLDatabaseToolkit
+    from langchain_community.utilities import SQLDatabase
+
+    db = SQLDatabase.from_uri(dbPath) #"sqlite:///Chinook.db"
+
+    toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+
+    tools = toolkit.get_tools()
+
+    for tool in tools:
+        print(f"{tool.name}: {tool.description}\n")
+
+    return tools
