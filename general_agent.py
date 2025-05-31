@@ -8,14 +8,12 @@ from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferWindowMemory
 from pydantic import BaseModel
 
-# Add Config class to allow arbitrary types
-class Config(BaseModel):
-    arbitrary_types_allowed = True
+from base_agent import BaseAgent
 
-# from base_agent import BaseAgent
-from tools import StockPriceTool, WeatherTool, search_tool
 
-class AIAgent:
+from tools import StockPriceTool, WeatherTool, get_search_tool
+
+class AIAgent(BaseAgent):
     def __init__(self, openai_api_key: Optional[str] = None, serper_api_key: Optional[str] = None):
         """
         Initialize the AI Agent.
@@ -63,7 +61,7 @@ class AIAgent:
         prompt = self._get_system_prompt()
         
         # Create agent
-        agent = initialize_agent(self.tools, self.llm, agent_type=AgentType.OPENAI, memory=self.memory)
+        agent = initialize_agent(self.tools, self.llm, agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True, memory=self.memory)
         
         # Initialize agent executor
         self.agent = agent
@@ -73,7 +71,7 @@ class AIAgent:
         return [
             StockPriceTool(),
             WeatherTool(),
-            search_tool
+            get_search_tool()
         ]
     
     def _get_system_prompt(self) -> str:

@@ -35,14 +35,16 @@ class StockPriceTool(BaseTool):
         raise NotImplementedError("Async not implemented")
 
 
+def get_search_tool():
 
-search = GoogleSerperAPIWrapper()
-# Define the tool for search
-search_tool = Tool(
-    name="Google Search",
-    func=search.run,
-    description="Use this tool when you need to search for real-time information from Google."
-)
+    search = GoogleSerperAPIWrapper()
+    # Define the tool for search
+    search_tool = Tool(
+        name="Google Search",
+        func=search.run,
+        description="Use this tool when you need to search for real-time information from Google."
+    )
+    return search_tool
 
 
 # Define input schema for weather tool
@@ -75,7 +77,7 @@ class WeatherTool(BaseTool):
         raise NotImplementedError("Async not implemented")
 
 
-get_db_tools(dbPath, llm):
+def get_db_tools(dbPath, llm):
     from langchain_community.agent_toolkits import SQLDatabaseToolkit
     from langchain_community.utilities import SQLDatabase
 
